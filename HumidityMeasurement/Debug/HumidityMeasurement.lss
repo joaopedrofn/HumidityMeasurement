@@ -3,27 +3,29 @@ HumidityMeasurement.elf:     file format elf32-avr
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
-  0 .data         00000000  00800100  00800100  00000112  2**0
+  0 .data         00000000  00800100  00800100  000001ba  2**0
                   CONTENTS, ALLOC, LOAD, DATA
-  1 .text         000000be  00000000  00000000  00000054  2**1
+  1 .text         00000166  00000000  00000000  00000054  2**1
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  2 .comment      00000030  00000000  00000000  00000112  2**0
+  2 .comment      00000030  00000000  00000000  000001ba  2**0
                   CONTENTS, READONLY
-  3 .note.gnu.avr.deviceinfo 00000040  00000000  00000000  00000144  2**2
+  3 .note.gnu.avr.deviceinfo 00000040  00000000  00000000  000001ec  2**2
                   CONTENTS, READONLY
-  4 .debug_aranges 00000020  00000000  00000000  00000184  2**0
+  4 .debug_aranges 00000030  00000000  00000000  0000022c  2**0
                   CONTENTS, READONLY, DEBUGGING
-  5 .debug_info   00000770  00000000  00000000  000001a4  2**0
+  5 .debug_info   00000a0c  00000000  00000000  0000025c  2**0
                   CONTENTS, READONLY, DEBUGGING
-  6 .debug_abbrev 0000067e  00000000  00000000  00000914  2**0
+  6 .debug_abbrev 0000074b  00000000  00000000  00000c68  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_line   000002b0  00000000  00000000  00000f92  2**0
+  7 .debug_line   00000394  00000000  00000000  000013b3  2**0
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_frame  00000024  00000000  00000000  00001244  2**2
+  8 .debug_frame  00000044  00000000  00000000  00001748  2**2
                   CONTENTS, READONLY, DEBUGGING
-  9 .debug_str    00000391  00000000  00000000  00001268  2**0
+  9 .debug_str    000003db  00000000  00000000  0000178c  2**0
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_ranges 00000010  00000000  00000000  000015f9  2**0
+ 10 .debug_loc    00000108  00000000  00000000  00001b67  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 11 .debug_ranges 00000038  00000000  00000000  00001c6f  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -63,73 +65,237 @@ Disassembly of section .text:
   6e:	d8 e0       	ldi	r29, 0x08	; 8
   70:	de bf       	out	0x3e, r29	; 62
   72:	cd bf       	out	0x3d, r28	; 61
-  74:	0e 94 40 00 	call	0x80	; 0x80 <main>
-  78:	0c 94 5d 00 	jmp	0xba	; 0xba <_exit>
+  74:	0e 94 54 00 	call	0xa8	; 0xa8 <main>
+  78:	0c 94 b1 00 	jmp	0x162	; 0x162 <_exit>
 
 0000007c <__bad_interrupt>:
   7c:	0c 94 00 00 	jmp	0	; 0x0 <__vectors>
 
-00000080 <main>:
-	
-    /* Replace with your application code */
-    while (1) 
-    {
-		_delay_ms(20000);
+00000080 <USART_init>:
+#include <util/delay.h>
+
+
+
+void USART_init() {
+	UBRR0H = 0;
+  80:	10 92 c5 00 	sts	0x00C5, r1	; 0x8000c5 <__TEXT_REGION_LENGTH__+0x7e00c5>
+	UBRR0L = 0b001100111;
+  84:	87 e6       	ldi	r24, 0x67	; 103
+  86:	80 93 c4 00 	sts	0x00C4, r24	; 0x8000c4 <__TEXT_REGION_LENGTH__+0x7e00c4>
+	UCSR0B = (1<<RXEN0) | (1<<TXEN0);
+  8a:	88 e1       	ldi	r24, 0x18	; 24
+  8c:	80 93 c1 00 	sts	0x00C1, r24	; 0x8000c1 <__TEXT_REGION_LENGTH__+0x7e00c1>
+	UCSR0C = (1<<USBS0) | (3<<UCSZ00);
+  90:	8e e0       	ldi	r24, 0x0E	; 14
+  92:	80 93 c2 00 	sts	0x00C2, r24	; 0x8000c2 <__TEXT_REGION_LENGTH__+0x7e00c2>
+  96:	08 95       	ret
+
+00000098 <USART_send>:
+}
+
+void USART_send(unsigned char data){
+	while(!(UCSR0A & (1<<UDRE0)));
+  98:	e0 ec       	ldi	r30, 0xC0	; 192
+  9a:	f0 e0       	ldi	r31, 0x00	; 0
+  9c:	90 81       	ld	r25, Z
+  9e:	95 ff       	sbrs	r25, 5
+  a0:	fd cf       	rjmp	.-6      	; 0x9c <USART_send+0x4>
+	UDR0 = data;
+  a2:	80 93 c6 00 	sts	0x00C6, r24	; 0x8000c6 <__TEXT_REGION_LENGTH__+0x7e00c6>
+  a6:	08 95       	ret
+
+000000a8 <main>:
+}
+
+int main(void)
+{
+	USART_init();
+  a8:	0e 94 40 00 	call	0x80	; 0x80 <USART_init>
+		uint8_t tempL;
+		uint8_t tempH;
+		uint8_t humidityL;
+		uint8_t humidityH;
+		_delay_ms(2000);
 		DDRD = (1 << PORTD7);
-  80:	80 e8       	ldi	r24, 0x80	; 128
+  ac:	10 e8       	ldi	r17, 0x80	; 128
 	#else
 		//round up by default
 		__ticks_dc = (uint32_t)(ceil(fabs(__tmp)));
 	#endif
 
 	__builtin_avr_delay_cycles(__ticks_dc);
-  82:	2f ef       	ldi	r18, 0xFF	; 255
-  84:	38 e0       	ldi	r19, 0x08	; 8
-  86:	9d e3       	ldi	r25, 0x3D	; 61
-  88:	21 50       	subi	r18, 0x01	; 1
-  8a:	30 40       	sbci	r19, 0x00	; 0
-  8c:	90 40       	sbci	r25, 0x00	; 0
-  8e:	e1 f7       	brne	.-8      	; 0x88 <main+0x8>
-  90:	00 c0       	rjmp	.+0      	; 0x92 <main+0x12>
-  92:	00 00       	nop
-  94:	8a b9       	out	0x0a, r24	; 10
+  ae:	d8 e0       	ldi	r29, 0x08	; 8
+  b0:	c0 e0       	ldi	r28, 0x00	; 0
+	#else
+		//round up by default
+		__ticks_dc = (uint32_t)(ceil(fabs(__tmp)));
+	#endif
+
+	__builtin_avr_delay_cycles(__ticks_dc);
+  b2:	2f ef       	ldi	r18, 0xFF	; 255
+  b4:	87 ea       	ldi	r24, 0xA7	; 167
+  b6:	91 e6       	ldi	r25, 0x61	; 97
+  b8:	21 50       	subi	r18, 0x01	; 1
+  ba:	80 40       	sbci	r24, 0x00	; 0
+  bc:	90 40       	sbci	r25, 0x00	; 0
+  be:	e1 f7       	brne	.-8      	; 0xb8 <main+0x10>
+  c0:	00 c0       	rjmp	.+0      	; 0xc2 <main+0x1a>
+  c2:	00 00       	nop
+  c4:	1a b9       	out	0x0a, r17	; 10
 		PORTD = (1 << PORTD7);
-  96:	8b b9       	out	0x0b, r24	; 11
-  98:	e9 e6       	ldi	r30, 0x69	; 105
-  9a:	f8 e1       	ldi	r31, 0x18	; 24
-  9c:	31 97       	sbiw	r30, 0x01	; 1
-  9e:	f1 f7       	brne	.-4      	; 0x9c <main+0x1c>
-  a0:	00 c0       	rjmp	.+0      	; 0xa2 <main+0x22>
-  a2:	00 00       	nop
-		_delay_ms(25);
+  c6:	1b b9       	out	0x0b, r17	; 11
+  c8:	ef e9       	ldi	r30, 0x9F	; 159
+  ca:	ff e0       	ldi	r31, 0x0F	; 15
+  cc:	31 97       	sbiw	r30, 0x01	; 1
+  ce:	f1 f7       	brne	.-4      	; 0xcc <main+0x24>
+  d0:	00 c0       	rjmp	.+0      	; 0xd2 <main+0x2a>
+  d2:	00 00       	nop
+		_delay_ms(1);
 		PORTD = 0;
-  a4:	1b b8       	out	0x0b, r1	; 11
-  a6:	e3 ef       	ldi	r30, 0xF3	; 243
-  a8:	f1 e0       	ldi	r31, 0x01	; 1
-  aa:	31 97       	sbiw	r30, 0x01	; 1
-  ac:	f1 f7       	brne	.-4      	; 0xaa <main+0x2a>
-  ae:	00 c0       	rjmp	.+0      	; 0xb0 <main+0x30>
-  b0:	00 00       	nop
-		_delay_ms(2);
+  d4:	1b b8       	out	0x0b, r1	; 11
+	#else
+		//round up by default
+		__ticks_dc = (uint32_t)(ceil(fabs(__tmp)));
+	#endif
+
+	__builtin_avr_delay_cycles(__ticks_dc);
+  d6:	fa e6       	ldi	r31, 0x6A	; 106
+  d8:	fa 95       	dec	r31
+  da:	f1 f7       	brne	.-4      	; 0xd8 <main+0x30>
+  dc:	00 c0       	rjmp	.+0      	; 0xde <main+0x36>
+		_delay_us(20);
 		cli();
-  b2:	f8 94       	cli
-		PORTD = 
+  de:	f8 94       	cli
 		DDRD = 0;
-  b4:	1a b8       	out	0x0a, r1	; 10
-		PORTD = (1 << PORTD7);
-		_delay_ms(25);
-		PORTD = 0;
-		_delay_ms(2);
+  e0:	1a b8       	out	0x0a, r1	; 10
+	#else
+		//round up by default
+		__ticks_dc = (uint32_t)(ceil(fabs(__tmp)));
+	#endif
+
+	__builtin_avr_delay_cycles(__ticks_dc);
+  e2:	8f e3       	ldi	r24, 0x3F	; 63
+  e4:	9c e9       	ldi	r25, 0x9C	; 156
+  e6:	01 97       	sbiw	r24, 0x01	; 1
+  e8:	f1 f7       	brne	.-4      	; 0xe6 <main+0x3e>
+  ea:	00 c0       	rjmp	.+0      	; 0xec <main+0x44>
+  ec:	00 00       	nop
+	#else
+		//round up by default
+		__ticks_dc = (uint32_t)(ceil(fabs(__tmp)));
+	#endif
+
+	__builtin_avr_delay_cycles(__ticks_dc);
+  ee:	ef e7       	ldi	r30, 0x7F	; 127
+  f0:	f2 e0       	ldi	r31, 0x02	; 2
+  f2:	31 97       	sbiw	r30, 0x01	; 1
+  f4:	f1 f7       	brne	.-4      	; 0xf2 <main+0x4a>
+  f6:	00 c0       	rjmp	.+0      	; 0xf8 <main+0x50>
+  f8:	00 00       	nop
+  fa:	8d 2f       	mov	r24, r29
+  fc:	9c 2f       	mov	r25, r28
+		_delay_ms(10);
+		_delay_us(160);
+		for(int i = 0; i < 8; i++){
+			tempL = tempL | (((PORTD >> PORTD7) & 0x80)<<i);
+  fe:	2b b1       	in	r18, 0x0b	; 11
+ 100:	e7 ec       	ldi	r30, 0xC7	; 199
+ 102:	f0 e0       	ldi	r31, 0x00	; 0
+ 104:	31 97       	sbiw	r30, 0x01	; 1
+ 106:	f1 f7       	brne	.-4      	; 0x104 <main+0x5c>
+ 108:	00 c0       	rjmp	.+0      	; 0x10a <main+0x62>
+ 10a:	00 00       	nop
+ 10c:	01 97       	sbiw	r24, 0x01	; 1
+		_delay_us(20);
 		cli();
-		PORTD = 
-  b6:	1b b8       	out	0x0b, r1	; 11
 		DDRD = 0;
-		
+		_delay_ms(10);
+		_delay_us(160);
+		for(int i = 0; i < 8; i++){
+ 10e:	b9 f7       	brne	.-18     	; 0xfe <main+0x56>
+ 110:	8d 2f       	mov	r24, r29
+ 112:	9c 2f       	mov	r25, r28
+			tempL = tempL | (((PORTD >> PORTD7) & 0x80)<<i);
+			_delay_us(50);
+		}
+		for(int i = 0; i < 8; i++){
+			tempH = tempH | (((PORTD >> PORTD7) & 0x80)<<i);
+ 114:	2b b1       	in	r18, 0x0b	; 11
+ 116:	e7 ec       	ldi	r30, 0xC7	; 199
+ 118:	f0 e0       	ldi	r31, 0x00	; 0
+ 11a:	31 97       	sbiw	r30, 0x01	; 1
+ 11c:	f1 f7       	brne	.-4      	; 0x11a <main+0x72>
+ 11e:	00 c0       	rjmp	.+0      	; 0x120 <main+0x78>
+ 120:	00 00       	nop
+ 122:	01 97       	sbiw	r24, 0x01	; 1
+		_delay_us(160);
+		for(int i = 0; i < 8; i++){
+			tempL = tempL | (((PORTD >> PORTD7) & 0x80)<<i);
+			_delay_us(50);
+		}
+		for(int i = 0; i < 8; i++){
+ 124:	b9 f7       	brne	.-18     	; 0x114 <main+0x6c>
+ 126:	8d 2f       	mov	r24, r29
+ 128:	9c 2f       	mov	r25, r28
+			tempH = tempH | (((PORTD >> PORTD7) & 0x80)<<i);
+			_delay_us(50);
+		}
+		for(int i = 0; i < 8; i++){
+			humidityL = humidityL | (((PORTD >> PORTD7) & 0x80)<<i);
+ 12a:	2b b1       	in	r18, 0x0b	; 11
+ 12c:	e7 ec       	ldi	r30, 0xC7	; 199
+ 12e:	f0 e0       	ldi	r31, 0x00	; 0
+ 130:	31 97       	sbiw	r30, 0x01	; 1
+ 132:	f1 f7       	brne	.-4      	; 0x130 <main+0x88>
+ 134:	00 c0       	rjmp	.+0      	; 0x136 <main+0x8e>
+ 136:	00 00       	nop
+ 138:	01 97       	sbiw	r24, 0x01	; 1
+		}
+		for(int i = 0; i < 8; i++){
+			tempH = tempH | (((PORTD >> PORTD7) & 0x80)<<i);
+			_delay_us(50);
+		}
+		for(int i = 0; i < 8; i++){
+ 13a:	b9 f7       	brne	.-18     	; 0x12a <main+0x82>
+ 13c:	8d 2f       	mov	r24, r29
+ 13e:	9c 2f       	mov	r25, r28
+			humidityL = humidityL | (((PORTD >> PORTD7) & 0x80)<<i);
+			_delay_us(50);
+		}
+		for(int i = 0; i < 8; i++){
+			humidityH = humidityH | (((PORTD >> PORTD7) & 0x80)<<i);
+ 140:	2b b1       	in	r18, 0x0b	; 11
+ 142:	e7 ec       	ldi	r30, 0xC7	; 199
+ 144:	f0 e0       	ldi	r31, 0x00	; 0
+ 146:	31 97       	sbiw	r30, 0x01	; 1
+ 148:	f1 f7       	brne	.-4      	; 0x146 <main+0x9e>
+ 14a:	00 c0       	rjmp	.+0      	; 0x14c <main+0xa4>
+ 14c:	00 00       	nop
+ 14e:	01 97       	sbiw	r24, 0x01	; 1
+		}
+		for(int i = 0; i < 8; i++){
+			humidityL = humidityL | (((PORTD >> PORTD7) & 0x80)<<i);
+			_delay_us(50);
+		}
+		for(int i = 0; i < 8; i++){
+ 150:	b9 f7       	brne	.-18     	; 0x140 <main+0x98>
+			humidityH = humidityH | (((PORTD >> PORTD7) & 0x80)<<i);
+			_delay_us(50);
+		}
+		sei();
+ 152:	78 94       	sei
+		USART_send(tempH);
+ 154:	80 e0       	ldi	r24, 0x00	; 0
+ 156:	0e 94 4c 00 	call	0x98	; 0x98 <USART_send>
+		USART_send(tempL);
+ 15a:	80 e0       	ldi	r24, 0x00	; 0
+ 15c:	0e 94 4c 00 	call	0x98	; 0x98 <USART_send>
+				
     }
-  b8:	e4 cf       	rjmp	.-56     	; 0x82 <main+0x2>
+ 160:	a8 cf       	rjmp	.-176    	; 0xb2 <main+0xa>
 
-000000ba <_exit>:
-  ba:	f8 94       	cli
+00000162 <_exit>:
+ 162:	f8 94       	cli
 
-000000bc <__stop_program>:
-  bc:	ff cf       	rjmp	.-2      	; 0xbc <__stop_program>
+00000164 <__stop_program>:
+ 164:	ff cf       	rjmp	.-2      	; 0x164 <__stop_program>
