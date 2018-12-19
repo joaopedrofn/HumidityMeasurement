@@ -32,19 +32,16 @@ void USART_send(unsigned char data){
 
 int main(void)
 {
+	uint8_t tempL[8];
+	uint8_t tempH[8];
+	uint8_t humidityL[8];
+	uint8_t humidityH[8];
 	USART_init();
 	DDRD |= (1<<PORTD7);
 	PORTD |= (1<<PORTD7);
     while (1) 
     {
-		int8_t tempL;
-		int8_t tempH;
-		uint8_t humidityL;
-		uint8_t humidityH;
-		uint8_t retries, i;
-		int8_t j;
-		retries = i =j =0;
-		uint8_t timeout = 0;
+
 		_delay_ms(2000);
 		
 		//START READING	
@@ -78,27 +75,34 @@ int main(void)
 		
 		//READ BYTES
 		for(int i = 0; i < 8; i++){
-			tempL = tempL | (PORTD & (1<<PORTD7));
+			tempL[i] = (PORTD & (1<<PORTD7))?0b1:0b0;
 			_delay_us(50);
 		}
 		for(int i = 0; i < 8; i++){
-			tempH = tempH | (PORTD & (1<<PORTD7));
+			tempH[i] = (PORTD & (1<<PORTD7))?0b1:0b0;
 			_delay_us(50);
 		}
 		for(int i = 0; i < 8; i++){
-			humidityL = humidityL | (PORTD & (1<<PORTD7));
+			humidityL[i] = (PORTD & (1<<PORTD7))?0b1:0b0;
 			_delay_us(50);
 		}
 		for(int i = 0; i < 8; i++){
-			humidityH = humidityH | (PORTD & (1<<PORTD7));
+			humidityH[i] = (PORTD & (1<<PORTD7))?0b1:0b0;
 			_delay_us(50);
 		}
 		
 		//ENABLE INTERRUPTIONS (END OF CRITICAL PHASE)
 		sei();
 		
-		USART_send(tempH+48);
-		USART_send(tempL+48);
+		USART_send(humidityH[0]);
+		USART_send(humidityH[1]);
+		USART_send(humidityH[2]);
+		USART_send(humidityH[3]);
+		USART_send(humidityH[4]);
+		USART_send(humidityH[5]);
+		USART_send(humidityH[6]);
+		USART_send(humidityH[7]);
+		USART_send('\n');
 				
     }
 }

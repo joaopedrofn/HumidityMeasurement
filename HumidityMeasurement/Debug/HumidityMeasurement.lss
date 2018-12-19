@@ -3,29 +3,29 @@ HumidityMeasurement.elf:     file format elf32-avr
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
-  0 .data         00000000  00800100  00800100  000001f0  2**0
+  0 .data         00000000  00800100  00800100  00000232  2**0
                   CONTENTS, ALLOC, LOAD, DATA
-  1 .text         0000019c  00000000  00000000  00000054  2**1
+  1 .text         000001de  00000000  00000000  00000054  2**1
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  2 .comment      00000030  00000000  00000000  000001f0  2**0
+  2 .comment      00000030  00000000  00000000  00000232  2**0
                   CONTENTS, READONLY
-  3 .note.gnu.avr.deviceinfo 00000040  00000000  00000000  00000220  2**2
+  3 .note.gnu.avr.deviceinfo 00000040  00000000  00000000  00000264  2**2
                   CONTENTS, READONLY
-  4 .debug_aranges 00000030  00000000  00000000  00000260  2**0
+  4 .debug_aranges 00000030  00000000  00000000  000002a4  2**0
                   CONTENTS, READONLY, DEBUGGING
-  5 .debug_info   00000ab2  00000000  00000000  00000290  2**0
+  5 .debug_info   00000aba  00000000  00000000  000002d4  2**0
                   CONTENTS, READONLY, DEBUGGING
-  6 .debug_abbrev 00000772  00000000  00000000  00000d42  2**0
+  6 .debug_abbrev 0000075b  00000000  00000000  00000d8e  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_line   000003bb  00000000  00000000  000014b4  2**0
+  7 .debug_line   000003d5  00000000  00000000  000014e9  2**0
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_frame  00000044  00000000  00000000  00001870  2**2
+  8 .debug_frame  00000054  00000000  00000000  000018c0  2**2
                   CONTENTS, READONLY, DEBUGGING
-  9 .debug_str    000003eb  00000000  00000000  000018b4  2**0
+  9 .debug_str    000003e4  00000000  00000000  00001914  2**0
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_loc    000000f8  00000000  00000000  00001c9f  2**0
+ 10 .debug_loc    00000130  00000000  00000000  00001cf8  2**0
                   CONTENTS, READONLY, DEBUGGING
- 11 .debug_ranges 00000038  00000000  00000000  00001d97  2**0
+ 11 .debug_ranges 00000038  00000000  00000000  00001e28  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -66,7 +66,7 @@ Disassembly of section .text:
   70:	de bf       	out	0x3e, r29	; 62
   72:	cd bf       	out	0x3d, r28	; 61
   74:	0e 94 54 00 	call	0xa8	; 0xa8 <main>
-  78:	0c 94 cc 00 	jmp	0x198	; 0x198 <_exit>
+  78:	0c 94 ed 00 	jmp	0x1da	; 0x1da <_exit>
 
 0000007c <__bad_interrupt>:
   7c:	0c 94 00 00 	jmp	0	; 0x0 <__vectors>
@@ -109,226 +109,263 @@ void USART_send(unsigned char data){
 
 int main(void)
 {
+  a8:	cf 93       	push	r28
+  aa:	df 93       	push	r29
+  ac:	cd b7       	in	r28, 0x3d	; 61
+  ae:	de b7       	in	r29, 0x3e	; 62
+  b0:	28 97       	sbiw	r28, 0x08	; 8
+  b2:	0f b6       	in	r0, 0x3f	; 63
+  b4:	f8 94       	cli
+  b6:	de bf       	out	0x3e, r29	; 62
+  b8:	0f be       	out	0x3f, r0	; 63
+  ba:	cd bf       	out	0x3d, r28	; 61
+	uint8_t tempL[8];
+	uint8_t tempH[8];
+	uint8_t humidityL[8];
+	uint8_t humidityH[8];
 	USART_init();
-  a8:	0e 94 40 00 	call	0x80	; 0x80 <USART_init>
+  bc:	0e 94 40 00 	call	0x80	; 0x80 <USART_init>
 	DDRD |= (1<<PORTD7);
-  ac:	57 9a       	sbi	0x0a, 7	; 10
+  c0:	57 9a       	sbi	0x0a, 7	; 10
 	PORTD |= (1<<PORTD7);
-  ae:	5f 9a       	sbi	0x0b, 7	; 11
+  c2:	5f 9a       	sbi	0x0b, 7	; 11
 	#else
 		//round up by default
 		__ticks_dc = (uint32_t)(ceil(fabs(__tmp)));
 	#endif
 
 	__builtin_avr_delay_cycles(__ticks_dc);
-  b0:	08 e0       	ldi	r16, 0x08	; 8
-  b2:	10 e0       	ldi	r17, 0x00	; 0
+  c4:	68 94       	set
+  c6:	ee 24       	eor	r14, r14
+  c8:	e3 f8       	bld	r14, 3
+  ca:	f1 2c       	mov	r15, r1
+  cc:	8e 01       	movw	r16, r28
+  ce:	07 5f       	subi	r16, 0xF7	; 247
+  d0:	1f 4f       	sbci	r17, 0xFF	; 255
 	#else
 		//round up by default
 		__ticks_dc = (uint32_t)(ceil(fabs(__tmp)));
 	#endif
 
 	__builtin_avr_delay_cycles(__ticks_dc);
-  b4:	2f ef       	ldi	r18, 0xFF	; 255
-  b6:	87 ea       	ldi	r24, 0xA7	; 167
-  b8:	91 e6       	ldi	r25, 0x61	; 97
-  ba:	21 50       	subi	r18, 0x01	; 1
-  bc:	80 40       	sbci	r24, 0x00	; 0
-  be:	90 40       	sbci	r25, 0x00	; 0
-  c0:	e1 f7       	brne	.-8      	; 0xba <main+0x12>
-  c2:	00 c0       	rjmp	.+0      	; 0xc4 <main+0x1c>
-  c4:	00 00       	nop
-		retries = i =j =0;
-		uint8_t timeout = 0;
+  d2:	2f ef       	ldi	r18, 0xFF	; 255
+  d4:	87 ea       	ldi	r24, 0xA7	; 167
+  d6:	91 e6       	ldi	r25, 0x61	; 97
+  d8:	21 50       	subi	r18, 0x01	; 1
+  da:	80 40       	sbci	r24, 0x00	; 0
+  dc:	90 40       	sbci	r25, 0x00	; 0
+  de:	e1 f7       	brne	.-8      	; 0xd8 <main+0x30>
+  e0:	00 c0       	rjmp	.+0      	; 0xe2 <main+0x3a>
+  e2:	00 00       	nop
+    {
+
 		_delay_ms(2000);
 		
 		//START READING	
 		PORTD |= (1<<PORTD7);
-  c6:	5f 9a       	sbi	0x0b, 7	; 11
-  c8:	ef ef       	ldi	r30, 0xFF	; 255
-  ca:	f4 e3       	ldi	r31, 0x34	; 52
-  cc:	2c e0       	ldi	r18, 0x0C	; 12
-  ce:	e1 50       	subi	r30, 0x01	; 1
-  d0:	f0 40       	sbci	r31, 0x00	; 0
-  d2:	20 40       	sbci	r18, 0x00	; 0
-  d4:	e1 f7       	brne	.-8      	; 0xce <main+0x26>
-  d6:	00 c0       	rjmp	.+0      	; 0xd8 <main+0x30>
-  d8:	00 00       	nop
+  e4:	5f 9a       	sbi	0x0b, 7	; 11
+  e6:	ef ef       	ldi	r30, 0xFF	; 255
+  e8:	f4 e3       	ldi	r31, 0x34	; 52
+  ea:	2c e0       	ldi	r18, 0x0C	; 12
+  ec:	e1 50       	subi	r30, 0x01	; 1
+  ee:	f0 40       	sbci	r31, 0x00	; 0
+  f0:	20 40       	sbci	r18, 0x00	; 0
+  f2:	e1 f7       	brne	.-8      	; 0xec <main+0x44>
+  f4:	00 c0       	rjmp	.+0      	; 0xf6 <main+0x4e>
+  f6:	00 00       	nop
 		_delay_ms(250);
 		
 		//SET LOW FOR 20 ms
 		DDRD &= ~(1<<PORTD7);
-  da:	57 98       	cbi	0x0a, 7	; 10
+  f8:	57 98       	cbi	0x0a, 7	; 10
 		PORTD &= ~(1<<PORTD7);
-  dc:	5f 98       	cbi	0x0b, 7	; 11
-  de:	8f ef       	ldi	r24, 0xFF	; 255
-  e0:	99 ef       	ldi	r25, 0xF9	; 249
-  e2:	e0 e0       	ldi	r30, 0x00	; 0
-  e4:	81 50       	subi	r24, 0x01	; 1
-  e6:	90 40       	sbci	r25, 0x00	; 0
-  e8:	e0 40       	sbci	r30, 0x00	; 0
-  ea:	e1 f7       	brne	.-8      	; 0xe4 <main+0x3c>
-  ec:	00 c0       	rjmp	.+0      	; 0xee <main+0x46>
-  ee:	00 00       	nop
+  fa:	5f 98       	cbi	0x0b, 7	; 11
+  fc:	8f ef       	ldi	r24, 0xFF	; 255
+  fe:	99 ef       	ldi	r25, 0xF9	; 249
+ 100:	e0 e0       	ldi	r30, 0x00	; 0
+ 102:	81 50       	subi	r24, 0x01	; 1
+ 104:	90 40       	sbci	r25, 0x00	; 0
+ 106:	e0 40       	sbci	r30, 0x00	; 0
+ 108:	e1 f7       	brne	.-8      	; 0x102 <main+0x5a>
+ 10a:	00 c0       	rjmp	.+0      	; 0x10c <main+0x64>
+ 10c:	00 00       	nop
 		_delay_ms(20);
 		
 		//TURN OFF INTERRUPTIONS (CRITICAL PHASE)
 		cli();
-  f0:	f8 94       	cli
+ 10e:	f8 94       	cli
 		
 		//END START SIGNAL
 		PORTD |= (1<<PORTD7);
-  f2:	5f 9a       	sbi	0x0b, 7	; 11
+ 110:	5f 9a       	sbi	0x0b, 7	; 11
 	#else
 		//round up by default
 		__ticks_dc = (uint32_t)(ceil(fabs(__tmp)));
 	#endif
 
 	__builtin_avr_delay_cycles(__ticks_dc);
-  f4:	f5 ed       	ldi	r31, 0xD5	; 213
-  f6:	fa 95       	dec	r31
-  f8:	f1 f7       	brne	.-4      	; 0xf6 <main+0x4e>
-  fa:	00 00       	nop
+ 112:	f5 ed       	ldi	r31, 0xD5	; 213
+ 114:	fa 95       	dec	r31
+ 116:	f1 f7       	brne	.-4      	; 0x114 <main+0x6c>
+ 118:	00 00       	nop
 		_delay_us(40);
 		
 		//START TO READ
 		DDRD |= (1<<PORTD7);
-  fc:	57 9a       	sbi	0x0a, 7	; 10
+ 11a:	57 9a       	sbi	0x0a, 7	; 10
 		PORTD |= (1<<PORTD7);
-  fe:	5f 9a       	sbi	0x0b, 7	; 11
- 100:	25 e3       	ldi	r18, 0x35	; 53
- 102:	2a 95       	dec	r18
- 104:	f1 f7       	brne	.-4      	; 0x102 <main+0x5a>
- 106:	00 00       	nop
- 108:	8f e3       	ldi	r24, 0x3F	; 63
- 10a:	91 e0       	ldi	r25, 0x01	; 1
- 10c:	01 97       	sbiw	r24, 0x01	; 1
- 10e:	f1 f7       	brne	.-4      	; 0x10c <main+0x64>
- 110:	00 c0       	rjmp	.+0      	; 0x112 <main+0x6a>
- 112:	00 00       	nop
- 114:	ef e3       	ldi	r30, 0x3F	; 63
- 116:	f1 e0       	ldi	r31, 0x01	; 1
- 118:	31 97       	sbiw	r30, 0x01	; 1
- 11a:	f1 f7       	brne	.-4      	; 0x118 <main+0x70>
- 11c:	00 c0       	rjmp	.+0      	; 0x11e <main+0x76>
- 11e:	00 00       	nop
- 120:	20 2f       	mov	r18, r16
- 122:	31 2f       	mov	r19, r17
+ 11c:	5f 9a       	sbi	0x0b, 7	; 11
+ 11e:	25 e3       	ldi	r18, 0x35	; 53
+ 120:	2a 95       	dec	r18
+ 122:	f1 f7       	brne	.-4      	; 0x120 <main+0x78>
+ 124:	00 00       	nop
+ 126:	8f e3       	ldi	r24, 0x3F	; 63
+ 128:	91 e0       	ldi	r25, 0x01	; 1
+ 12a:	01 97       	sbiw	r24, 0x01	; 1
+ 12c:	f1 f7       	brne	.-4      	; 0x12a <main+0x82>
+ 12e:	00 c0       	rjmp	.+0      	; 0x130 <main+0x88>
+ 130:	00 00       	nop
+ 132:	ef e3       	ldi	r30, 0x3F	; 63
+ 134:	f1 e0       	ldi	r31, 0x01	; 1
+ 136:	31 97       	sbiw	r30, 0x01	; 1
+ 138:	f1 f7       	brne	.-4      	; 0x136 <main+0x8e>
+ 13a:	00 c0       	rjmp	.+0      	; 0x13c <main+0x94>
+ 13c:	00 00       	nop
+ 13e:	8e 2d       	mov	r24, r14
+ 140:	9f 2d       	mov	r25, r15
 		//while((PORTD & (1<<PORTD7)));
 		_delay_us(80);
 		
 		//READ BYTES
 		for(int i = 0; i < 8; i++){
-			tempL = tempL | (PORTD & (1<<PORTD7));
- 124:	8b b1       	in	r24, 0x0b	; 11
- 126:	80 78       	andi	r24, 0x80	; 128
- 128:	d8 2b       	or	r29, r24
- 12a:	87 ec       	ldi	r24, 0xC7	; 199
- 12c:	90 e0       	ldi	r25, 0x00	; 0
- 12e:	01 97       	sbiw	r24, 0x01	; 1
- 130:	f1 f7       	brne	.-4      	; 0x12e <main+0x86>
- 132:	00 c0       	rjmp	.+0      	; 0x134 <main+0x8c>
- 134:	00 00       	nop
- 136:	21 50       	subi	r18, 0x01	; 1
- 138:	31 09       	sbc	r19, r1
+			tempL[i] = (PORTD & (1<<PORTD7))?0b1:0b0;
+ 142:	2b b1       	in	r18, 0x0b	; 11
+ 144:	e7 ec       	ldi	r30, 0xC7	; 199
+ 146:	f0 e0       	ldi	r31, 0x00	; 0
+ 148:	31 97       	sbiw	r30, 0x01	; 1
+ 14a:	f1 f7       	brne	.-4      	; 0x148 <main+0xa0>
+ 14c:	00 c0       	rjmp	.+0      	; 0x14e <main+0xa6>
+ 14e:	00 00       	nop
+ 150:	01 97       	sbiw	r24, 0x01	; 1
 		//WAIT 80 us OF HIGH LEVEL
 		//while((PORTD & (1<<PORTD7)));
 		_delay_us(80);
 		
 		//READ BYTES
 		for(int i = 0; i < 8; i++){
- 13a:	a1 f7       	brne	.-24     	; 0x124 <main+0x7c>
- 13c:	20 2f       	mov	r18, r16
- 13e:	31 2f       	mov	r19, r17
-			tempL = tempL | (PORTD & (1<<PORTD7));
+ 152:	b9 f7       	brne	.-18     	; 0x142 <main+0x9a>
+ 154:	8e 2d       	mov	r24, r14
+ 156:	9f 2d       	mov	r25, r15
+			tempL[i] = (PORTD & (1<<PORTD7))?0b1:0b0;
 			_delay_us(50);
 		}
 		for(int i = 0; i < 8; i++){
-			tempH = tempH | (PORTD & (1<<PORTD7));
- 140:	8b b1       	in	r24, 0x0b	; 11
- 142:	80 78       	andi	r24, 0x80	; 128
- 144:	c8 2b       	or	r28, r24
- 146:	e7 ec       	ldi	r30, 0xC7	; 199
- 148:	f0 e0       	ldi	r31, 0x00	; 0
- 14a:	31 97       	sbiw	r30, 0x01	; 1
- 14c:	f1 f7       	brne	.-4      	; 0x14a <main+0xa2>
- 14e:	00 c0       	rjmp	.+0      	; 0x150 <main+0xa8>
- 150:	00 00       	nop
- 152:	21 50       	subi	r18, 0x01	; 1
- 154:	31 09       	sbc	r19, r1
+			tempH[i] = (PORTD & (1<<PORTD7))?0b1:0b0;
+ 158:	2b b1       	in	r18, 0x0b	; 11
+ 15a:	e7 ec       	ldi	r30, 0xC7	; 199
+ 15c:	f0 e0       	ldi	r31, 0x00	; 0
+ 15e:	31 97       	sbiw	r30, 0x01	; 1
+ 160:	f1 f7       	brne	.-4      	; 0x15e <main+0xb6>
+ 162:	00 c0       	rjmp	.+0      	; 0x164 <main+0xbc>
+ 164:	00 00       	nop
+ 166:	01 97       	sbiw	r24, 0x01	; 1
 		//READ BYTES
 		for(int i = 0; i < 8; i++){
-			tempL = tempL | (PORTD & (1<<PORTD7));
+			tempL[i] = (PORTD & (1<<PORTD7))?0b1:0b0;
 			_delay_us(50);
 		}
 		for(int i = 0; i < 8; i++){
- 156:	a1 f7       	brne	.-24     	; 0x140 <main+0x98>
- 158:	80 2f       	mov	r24, r16
- 15a:	91 2f       	mov	r25, r17
-			tempH = tempH | (PORTD & (1<<PORTD7));
+ 168:	b9 f7       	brne	.-18     	; 0x158 <main+0xb0>
+ 16a:	8e 2d       	mov	r24, r14
+ 16c:	9f 2d       	mov	r25, r15
+			tempH[i] = (PORTD & (1<<PORTD7))?0b1:0b0;
 			_delay_us(50);
 		}
 		for(int i = 0; i < 8; i++){
-			humidityL = humidityL | (PORTD & (1<<PORTD7));
- 15c:	2b b1       	in	r18, 0x0b	; 11
- 15e:	e7 ec       	ldi	r30, 0xC7	; 199
- 160:	f0 e0       	ldi	r31, 0x00	; 0
- 162:	31 97       	sbiw	r30, 0x01	; 1
- 164:	f1 f7       	brne	.-4      	; 0x162 <main+0xba>
- 166:	00 c0       	rjmp	.+0      	; 0x168 <main+0xc0>
- 168:	00 00       	nop
- 16a:	01 97       	sbiw	r24, 0x01	; 1
+			humidityL[i] = (PORTD & (1<<PORTD7))?0b1:0b0;
+ 16e:	2b b1       	in	r18, 0x0b	; 11
+ 170:	e7 ec       	ldi	r30, 0xC7	; 199
+ 172:	f0 e0       	ldi	r31, 0x00	; 0
+ 174:	31 97       	sbiw	r30, 0x01	; 1
+ 176:	f1 f7       	brne	.-4      	; 0x174 <main+0xcc>
+ 178:	00 c0       	rjmp	.+0      	; 0x17a <main+0xd2>
+ 17a:	00 00       	nop
+ 17c:	01 97       	sbiw	r24, 0x01	; 1
 		}
 		for(int i = 0; i < 8; i++){
-			tempH = tempH | (PORTD & (1<<PORTD7));
+			tempH[i] = (PORTD & (1<<PORTD7))?0b1:0b0;
 			_delay_us(50);
 		}
 		for(int i = 0; i < 8; i++){
- 16c:	b9 f7       	brne	.-18     	; 0x15c <main+0xb4>
- 16e:	80 2f       	mov	r24, r16
- 170:	91 2f       	mov	r25, r17
-			humidityL = humidityL | (PORTD & (1<<PORTD7));
+ 17e:	b9 f7       	brne	.-18     	; 0x16e <main+0xc6>
+ 180:	fe 01       	movw	r30, r28
+ 182:	31 96       	adiw	r30, 0x01	; 1
+			humidityL[i] = (PORTD & (1<<PORTD7))?0b1:0b0;
 			_delay_us(50);
 		}
 		for(int i = 0; i < 8; i++){
-			humidityH = humidityH | (PORTD & (1<<PORTD7));
- 172:	2b b1       	in	r18, 0x0b	; 11
- 174:	e7 ec       	ldi	r30, 0xC7	; 199
- 176:	f0 e0       	ldi	r31, 0x00	; 0
- 178:	31 97       	sbiw	r30, 0x01	; 1
- 17a:	f1 f7       	brne	.-4      	; 0x178 <main+0xd0>
- 17c:	00 c0       	rjmp	.+0      	; 0x17e <main+0xd6>
- 17e:	00 00       	nop
- 180:	01 97       	sbiw	r24, 0x01	; 1
+			humidityH[i] = (PORTD & (1<<PORTD7))?0b1:0b0;
+ 184:	8b b1       	in	r24, 0x0b	; 11
+ 186:	88 1f       	adc	r24, r24
+ 188:	88 27       	eor	r24, r24
+ 18a:	88 1f       	adc	r24, r24
+ 18c:	81 93       	st	Z+, r24
+ 18e:	87 ec       	ldi	r24, 0xC7	; 199
+ 190:	90 e0       	ldi	r25, 0x00	; 0
+ 192:	01 97       	sbiw	r24, 0x01	; 1
+ 194:	f1 f7       	brne	.-4      	; 0x192 <main+0xea>
+ 196:	00 c0       	rjmp	.+0      	; 0x198 <main+0xf0>
+ 198:	00 00       	nop
 		}
 		for(int i = 0; i < 8; i++){
-			humidityL = humidityL | (PORTD & (1<<PORTD7));
+			humidityL[i] = (PORTD & (1<<PORTD7))?0b1:0b0;
 			_delay_us(50);
 		}
 		for(int i = 0; i < 8; i++){
- 182:	b9 f7       	brne	.-18     	; 0x172 <main+0xca>
-			humidityH = humidityH | (PORTD & (1<<PORTD7));
+ 19a:	e0 17       	cp	r30, r16
+ 19c:	f1 07       	cpc	r31, r17
+ 19e:	91 f7       	brne	.-28     	; 0x184 <main+0xdc>
+			humidityH[i] = (PORTD & (1<<PORTD7))?0b1:0b0;
 			_delay_us(50);
 		}
 		
 		//ENABLE INTERRUPTIONS (END OF CRITICAL PHASE)
 		sei();
- 184:	78 94       	sei
+ 1a0:	78 94       	sei
 		
-		USART_send(tempH+48);
- 186:	80 e3       	ldi	r24, 0x30	; 48
- 188:	8c 0f       	add	r24, r28
- 18a:	0e 94 4c 00 	call	0x98	; 0x98 <USART_send>
-		USART_send(tempL+48);
- 18e:	80 e3       	ldi	r24, 0x30	; 48
- 190:	8d 0f       	add	r24, r29
- 192:	0e 94 4c 00 	call	0x98	; 0x98 <USART_send>
+		USART_send(humidityH[0]);
+ 1a2:	89 81       	ldd	r24, Y+1	; 0x01
+ 1a4:	0e 94 4c 00 	call	0x98	; 0x98 <USART_send>
+		USART_send(humidityH[1]);
+ 1a8:	8a 81       	ldd	r24, Y+2	; 0x02
+ 1aa:	0e 94 4c 00 	call	0x98	; 0x98 <USART_send>
+		USART_send(humidityH[2]);
+ 1ae:	8b 81       	ldd	r24, Y+3	; 0x03
+ 1b0:	0e 94 4c 00 	call	0x98	; 0x98 <USART_send>
+		USART_send(humidityH[3]);
+ 1b4:	8c 81       	ldd	r24, Y+4	; 0x04
+ 1b6:	0e 94 4c 00 	call	0x98	; 0x98 <USART_send>
+		USART_send(humidityH[4]);
+ 1ba:	8d 81       	ldd	r24, Y+5	; 0x05
+ 1bc:	0e 94 4c 00 	call	0x98	; 0x98 <USART_send>
+		USART_send(humidityH[5]);
+ 1c0:	8e 81       	ldd	r24, Y+6	; 0x06
+ 1c2:	0e 94 4c 00 	call	0x98	; 0x98 <USART_send>
+		USART_send(humidityH[6]);
+ 1c6:	8f 81       	ldd	r24, Y+7	; 0x07
+ 1c8:	0e 94 4c 00 	call	0x98	; 0x98 <USART_send>
+		USART_send(humidityH[7]);
+ 1cc:	88 85       	ldd	r24, Y+8	; 0x08
+ 1ce:	0e 94 4c 00 	call	0x98	; 0x98 <USART_send>
+		USART_send('\n');
+ 1d2:	8a e0       	ldi	r24, 0x0A	; 10
+ 1d4:	0e 94 4c 00 	call	0x98	; 0x98 <USART_send>
 				
     }
- 196:	8e cf       	rjmp	.-228    	; 0xb4 <main+0xc>
+ 1d8:	7c cf       	rjmp	.-264    	; 0xd2 <main+0x2a>
 
-00000198 <_exit>:
- 198:	f8 94       	cli
+000001da <_exit>:
+ 1da:	f8 94       	cli
 
-0000019a <__stop_program>:
- 19a:	ff cf       	rjmp	.-2      	; 0x19a <__stop_program>
+000001dc <__stop_program>:
+ 1dc:	ff cf       	rjmp	.-2      	; 0x1dc <__stop_program>
