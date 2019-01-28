@@ -2,7 +2,7 @@
  * HumidityMeasurement.c
  *
  * Created: 10/12/2018 08:27:23
- * Author : jzrhard06
+ * Author : Joaopedrofn
  */ 
 
 #ifndef F_CPU
@@ -25,85 +25,81 @@ void USART_init() {
 	UCSR0C = (1<<USBS0) | (3<<UCSZ00);
 }
 
-void USART_send(unsigned char data){
+void USART_send(unsigned int data){
 	while(!(UCSR0A & (1<<UDRE0)));
 	UDR0 = data;
 }
 
 int main(void)
 {
-	uint8_t tempL[8];
-	uint8_t tempH[8];
-	uint8_t humidityL[8];
-	uint8_t humidityH[8];
+	uint8_t data[5];
 	USART_init();
-	DDRD |= (1<<PORTD7);
+	DDRD &= ~(1<<PORTD7);
 	PORTD |= (1<<PORTD7);
     while (1) 
     {
-
 		_delay_ms(2000);
+		data[0] = data[1] = data[2] = data[3] = data[4] = 0;
 		
-		//START READING	
-		PORTD |= (1<<PORTD7);
-		_delay_ms(250);
-		
-		//SET LOW FOR 20 ms
+		//INPUT PULL UP
 		DDRD &= ~(1<<PORTD7);
-		PORTD &= ~(1<<PORTD7);
-		_delay_ms(20);
+		PORTD |= (1<<PORTD7);
+		_delay_ms(1);
 		
-		//TURN OFF INTERRUPTIONS (CRITICAL PHASE)
-		cli();
+		//SET LINE AS LOW
+		DDRD |= (1<<PORTD7);
+		PORTD &= ~(1<<PORTD7);
+		_delay_us(1100);
 		
 		//END START SIGNAL
+		DDRD &= ~(1<<PORTD7);
 		PORTD |= (1<<PORTD7);
-		_delay_us(40);
+		_delay_us(60);
 		
-		//START TO READ
-		DDRD |= (1<<PORTD7);
-		PORTD |= (1<<PORTD7);
-		_delay_us(10);
+		uint32_t cycles[80];
 		
-		//WAIT 80 us OF LOW LEVEL
-		//while(!(PORTD & (1<<PORTD7)));
-		_delay_us(80);
+		//CRITICAL AREA
+		cli();
 		
-		//WAIT 80 us OF HIGH LEVEL
-		//while((PORTD & (1<<PORTD7)));
-		_delay_us(80);
+		//WAIT FOR 80us LOW SIGNAL AND THEN HIGH SIGNAL
+		USART_send('a');
+		while(!(PORTD & (1 << PORTD7)));
+		USART_send('n');
+		while(PORTD & (1 << PORTD7));
+		USART_send('c');
 		
-		//READ BYTES
-		for(int i = 0; i < 8; i++){
-			tempL[i] = (PORTD & (1<<PORTD7))?0b1:0b0;
-			_delay_us(50);
-		}
-		for(int i = 0; i < 8; i++){
-			tempH[i] = (PORTD & (1<<PORTD7))?0b1:0b0;
-			_delay_us(50);
-		}
-		for(int i = 0; i < 8; i++){
-			humidityL[i] = (PORTD & (1<<PORTD7))?0b1:0b0;
-			_delay_us(50);
-		}
-		for(int i = 0; i < 8; i++){
-			humidityH[i] = (PORTD & (1<<PORTD7))?0b1:0b0;
-			_delay_us(50);
+		for( int i = 0; i < 80; i+=2 ){
+			 uint32_t lowCycles  = cycles[2*i];
+			 uint32_t highCycles = cycles[2*i+1];
+			 uint32_t  count1, count2;
+			 count1 = count2 = 0;
+			 while(!(PORTD & (1 << PORTD7))){
+				 count1++;
+			 }
+			 while((PORTD & (1 << PORTD7))){
+				 count2++;
+			 }
+			 cycles[i] = count1;
+			 cycles[i+1] = count2;
 		}
 		
-		//ENABLE INTERRUPTIONS (END OF CRITICAL PHASE)
+		//END OF CRITICAL AREA
 		sei();
 		
-		USART_send(humidityH[0]);
-		USART_send(humidityH[1]);
-		USART_send(humidityH[2]);
-		USART_send(humidityH[3]);
-		USART_send(humidityH[4]);
-		USART_send(humidityH[5]);
-		USART_send(humidityH[6]);
-		USART_send(humidityH[7]);
-		USART_send('\n');
-				
+		//CONVERT PULSE LENGTH TO VALUE
+		for (int i=0; i<40; ++i) {
+			uint32_t lowCycles  = cycles[2*i];
+			uint32_t highCycles = cycles[2*i+1];
+			data[i/8] <<= 1;
+			if (highCycles > lowCycles) {
+				data[i/8] |= 1;
+			}
+		}
+		
+		float f =((uint16_t)data[0]) << 8 | data[1];
+		f *= 0.1;
+		USART_send(f);
+		USART_send('a');
     }
 }
 
