@@ -1,7 +1,7 @@
 #include <DHT.h>
 #define DHTTYPE DHT22
 
-DHT dht(7, DHTTYPE);
+DHT dht(6, DHTTYPE);
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);

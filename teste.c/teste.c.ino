@@ -91,10 +91,7 @@ int main(void)
       }
     }
     
-	USART_send(data[0]);
-	USART_send(data[1]);
-	
-    /*float f =((uint16_t)data[0]) << 8 | data[1];
+    float f =((uint16_t)data[0]) << 8 | data[1];
     f *= 0.1;
     char h[5];
     String str;
@@ -102,7 +99,8 @@ int main(void)
     str.toCharArray(h, 7);
     for(int i = 0; i < strlen(h); i++)
       USART_send(h[i]);
-    USART_send('\n');*/
+    USART_send('\n');
     }
 }
+
 
