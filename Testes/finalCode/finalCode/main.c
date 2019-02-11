@@ -135,9 +135,9 @@ int main(void)
     
 		float fl =((uint16_t)dataH) << 8 | dataL;
 		char h2[5];
-		String str;
-		str = String(fl, 6);
-		str.toCharArray(h2, 7);
+		String str2;
+		str2 = String(fl, 6);
+		str2.toCharArray(h2, 7);
 		for(int i = 0; i < strlen(h2); i++)
 		USART_send(h2[i]);
 		USART_send('\n');
