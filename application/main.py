@@ -14,16 +14,28 @@ def plot():
         date =[]
         air = []
         soil = []
+        raw_soil = []
         for row in csv.reader(csvfile):
             date.append(dates.date2num(datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f')))
             air.append(float(row[1])*0.1)
             soil.append(((float(row[2])-1023)/(-1023))*100)
+            raw_soil.append(float(row[2]))
     fig1 = plt.figure()
     fig2 = plt.figure()
     pl1 = fig1.add_subplot(1,1,1)
     pl2 = fig2.add_subplot(1,1,1)
+    pl22 = pl2.twinx()
+    pl1.set_title('Umidade Relativa do Ar')
+    pl2.set_title('Umidade do Solo')
+    pl1.set_xlabel('Tempo')
+    pl2.set_xlabel('Tempo')
+    pl1.set_ylabel('Umidade %')
+    pl2.set_ylabel('Umidade %')
+    pl22.set_ylabel('Umidade sem tratamento')
     pl1.plot_date(date, air, 'b-')
-    pl2.plot_date(date, soil, 'b-')
+    pl2.plot_date(date, soil, 'b-', color='g')
+    pl22.plot_date(date, raw_soil, 'b-', color='g')
+    pl22.invert_yaxis()
     plt.show()
 
 def collectData():
