@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from serial import Serial
 import time
 import csv
@@ -39,11 +40,11 @@ def plot():
     plt.show()
 
 def collectData():
-    serial = Serial('COM14')
+    serial = Serial('COM7')
     global collect
     while collect:
-        time.sleep(5)
-        with open('db.csv', 'a', newline='') as csvfile:
+    	time.sleep(600)
+    	with open('db.csv', 'a', newline='') as csvfile:
             data = []
             data.append(datetime.now())
             serial.write(bytes('a', 'utf-8'))
@@ -68,9 +69,9 @@ def listenKeyboard():
             while(q != 'q'):
                 q = input("Para sair e plotar os gráficos digite 'q' e tecle 'enter'")
                 if(q): 
-                    collect = False
-                    plot()
-                    exit()
+                  collect = False
+                  plot()
+                  exit()
         elif op == '2':
             plot()
             exit()
